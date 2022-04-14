@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="./source/ico.ico" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+    <title>Cars.io - Minigame</title>
+    <!-- Version 1.0 -->
+</head>
+<body>
+    <h1 class="best-score">0</h1> <!-- active -->
+    <main class="result-area disable"> <!-- disable -->
+        <header class="score-tab">
+            <h4 class="score">BEST SCORE</h4>
+        </header>
+        <footer class="flash-text">
+            <p class="mobile-version">Touch the screen to start</p>
+            <p class="desktop-version">Press [space] to start</p>
+        </footer>
+    </main>
+    <!-- Step 1 -->
+    <div class="traffic green">
+        <div class="bg">
+            <div class="circle red"></div>
+            <div class="circle green"></div>
+        </div>
+    </div>
+    <!-- Claxon -->
+    <div class="claxon-btn">
+        <button class="push--flat">
+            <img src="./source/claxon.png">
+        </button>
+    </div>
+    <!-- Mobile version -->
+    <footer class="joystick">
+        <button class="brake">
+            <img src="./source/brake.png">
+        </button>
+        <button class="up">
+            <img src="./source/up.png">
+        </button>
+    </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha512-dLxUelApnYxpLt6K2iomGngnHO83iUvZytA3YjDUCjT0HDOHKXnVYdf3hU4JjM8uEhxf9nD1/ey98U3t2vZ0qQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/party-js@latest/bundle/party.min.js"></script>
+    <!-- <script src="./js/script.min.js"></script> -->
+    <script src="./js/script.js"></script>
+</body>
+</html>
