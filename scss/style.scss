@@ -13,11 +13,15 @@
     -webkit-tap-highlight-color: transparent;
     font-family: 'Source Code Pro', monospace;
 }
+img {
+    pointer-events: none !important;
+    user-select: none;
+}
 
 body{
     .best-score{
         position: fixed;
-        z-index: 999;
+        z-index: 9999;
         left: 50%;
         transform: translateX(-50%);
         top: 25vh;
@@ -26,9 +30,26 @@ body{
             top: 10vh;
         }
     }
+    .penalty{
+        position: fixed;
+        z-index: 9999;
+        top: 200px;
+        left: 50%;
+        transform: translateX(-50%);
+        transition: .3s;
+        color: #db5e71;
+        font-weight: bold;
+        opacity: 0;
+
+        
+        &.active{
+            animation: penaltyPointFlash 1s ease-out;
+        }
+    }
     .result-area{
         &.disable{
             opacity: 0;
+            z-index: 1;
         }
         transition: .4s;
         position: fixed;
@@ -37,7 +58,7 @@ body{
         background-color: rgba(0, 0, 0, .8);
         display: flex;
         justify-content: center;
-        z-index: 99;
+        z-index: 999;
         header{
             position: absolute;
             top: 20vh;
@@ -49,14 +70,6 @@ body{
             animation: flash 1s infinite ease;
             .mobile-version{
                 display: none;
-            }
-            @media screen and (max-width: 700px) {
-                .mobile-version{
-                    display: block;
-                }
-                .desktop-version{
-                    display: none;
-                }
             }
         }
     }  
@@ -205,22 +218,28 @@ body{
             padding: 0;
             margin: 0;
             transition: .4s;
+            position: relative;
+            img{
+                transition: .4s;
+                filter: drop-shadow(0 3px 2px rgba(0, 0, 0, .3));
+            }
             &.active{
                 transform: rotateX(30deg);
                 filter: brightness(90%);
+                img{
+                    filter: drop-shadow(0 9px 3px rgba(0, 0, 0, .3));
+                }
             }
             &.brake{
-                position: relative;
                 img{
-                    filter: drop-shadow(0 3px 2px rgba(0, 0, 0, .3));
                     width: 80px;
+                    z-index: -1;
                 }
             }
             &.up{
-                position: relative;
                 img{
-                    filter: drop-shadow(0 3px 2px rgba(0, 0, 0, .3));
                     height: 100px;
+                    z-index: -1;
                 }
             }
         }
@@ -236,6 +255,17 @@ body{
     }
 }
 
+@keyframes penaltyPointFlash {
+    60%{
+        top: 100px;
+        opacity: 1;
+    }
+    100%{
+        top: 90px;
+        opacity: 0;
+    }
+}
+
 
 // Mobile version
 @media only screen and (hover: none) and (pointer: coarse){
@@ -248,6 +278,14 @@ body{
                 // left: calc(100% - 80px);
                 // transform: none;
                 // width: min-content;
+            }
+        }
+        .result-area{
+            .mobile-version{
+                display: block !important;
+            }
+            .desktop-version{
+                display: none;
             }
         }
         .traffic{

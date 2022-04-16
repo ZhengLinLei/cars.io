@@ -13,15 +13,18 @@ let GAME_ = {
     // General data
     status: false,
     score: 0,
+    activeHonk: false,
     // Game data
     lastTimestamp: 0,
     angleMoved: 0,
+    scoreAngle: 0,
     initialPos: (3/2) * Math.PI,
     speed: 0.001,
     carAcelerate: false,
     carDecelerate: false,
     // Estra data
     trafficLight: true, // True means Green
+    trafficPenalty: false,
     trafficLightPosition: {x: 0, y: 0, z: 0}, // Calculate with help of the car position
     playerCar: false,
     npcCar: [],
@@ -42,7 +45,7 @@ for(let i = 1; i <= 1; i++){
 }
 
 // Define Variables
-let scene, camera, renderer, trafficLightsRe;
+let scene, camera, renderer, trafficLightsRe, activeHonkRe;
 
 
 // SOUNDS EFFECTS
@@ -358,6 +361,7 @@ window.addEventListener('load', ()=>{
         // Phisics: O = Oº + wt
         // But in this case the w are going to be dynamic so, the initial Oº will be reseted every frame.
         GAME_.angleMoved += playerSpeed * timeDelta;
+        GAME_.scoreAngle += playerSpeed * timeDelta;
         // Playerspeed : w
         // timeDelta : t ; In radians
         // += because we want the player car can go around the circle in anticlock direction
@@ -403,6 +407,33 @@ window.addEventListener('load', ()=>{
         el.mesh.position.y = vehicleY;
         el.mesh.rotation.z = el.angle + (el.clockwise ? -(Math.PI/2) : (Math.PI/2));
     }
+    function collisionDetectionOtherCar(){
+        GAME_.npcCar.forEach((el, i) =>{
+            const alpha = el.mesh.position;
+
+            GAME_.npcCar.forEach(pr =>{
+                // Get distance and stop runing once detected a vehicle forward de el vehicle
+                // Only apply to the cars in the same rail
+                if(pr.clockwise == el.clockwise){
+                    const beta = pr.mesh.position;
+                    const distance = getHitDistance(beta, alpha);
+                    if(distance > 0 && distance <= 150){
+                        if(distance <= 100){
+                            GAME_.npcCar[i].speed = 0;
+                        }else{
+                            GAME_.npcCar[i].speed = 0.5;
+                        }
+                    }else{
+                        if(distance == 0 && el != pr){
+                            GAME_.npcCar[i].speed = 3;
+                        }else{
+                            GAME_.npcCar[i].speed = getOtherSpeed(el.type) + (GAME_.activeHonk ? Math.random() : 0);
+                        }
+                    }
+                }
+            });
+        });
+    }
     function getPlayerSpeed(){
         // Dynamic speed with aceleration and deceleration
         return (GAME_.carAcelerate) ? GAME_.speed * 2 : ((GAME_.carDecelerate) ? GAME_.speed * 0.5 : GAME_.speed);
@@ -431,7 +462,14 @@ window.addEventListener('load', ()=>{
         return `#${(0x1000000+Math.random()*0xffffff).toString(16).substr(1,6)}`;
     }
     function acelerateNpc(){
+        clearTimeout(activeHonkRe);
 
+        // Create session
+        GAME_.activeHonk = true;
+
+        activeHonkRe = setTimeout(() =>{
+            GAME_.activeHonk = false;
+        }, 1000);
     }
     function addNpcCar(){
         // Get a random one;
@@ -522,13 +560,24 @@ window.addEventListener('load', ()=>{
         if(hit) console.log('hit');
     }
     function trafficLightsDetection(){
-        if(crossTrafficLights()){
+        if(crossTrafficLights() && !GAME_.trafficPenalty){
             if(!GAME_.trafficLight){
                 // Overwrite score
-                GAME_.score -= 1;
-                writeScore(GAME_.score);
+                GAME_.trafficPenalty = true;
+                if((GAME_.score - 1) > 0){
+                    GAME_.score -= 1;
+                    GAME_.scoreAngle -= (2 * Math.PI); 
 
-                console.log('red');
+                    // Penalty UI
+                    penaltyDom.classList.add('active');
+                    setTimeout(()=>{
+                        penaltyDom.classList.remove('active'); // HAS GOT CSS TRANSITION DELAY
+                    }, 1100);
+                }else{
+                    GAME_.score = 0;
+                    GAME_.scoreAngle = 0;
+                }
+                writeScore(GAME_.score);
             }
         }
     }
@@ -573,16 +622,22 @@ window.addEventListener('load', ()=>{
         movePlayerCar(timeDelta);
 
         // Round scores
-        const slaps = Math.floor((GAME_.angleMoved - (Math.PI / 2)) / (Math.PI *2));
+        const slaps = Math.floor((GAME_.scoreAngle - (Math.PI / 2)) / (Math.PI *2));
         if(slaps > GAME_.score){
             writeScore(slaps);
             // Overwrite score
             GAME_.score = slaps;
+
+            // Reset Penalty
+            GAME_.trafficPenalty = false;
         }
 
         // Other cars
         if ((GAME_.npcCar.length < (slaps + 1) / 5) && (GAME_.npcCar.length < 4)) addNpcCar();
 
+
+        // Inspect NPC car Collision
+        collisionDetectionOtherCar();
 
         moveOtherCar(timeDelta);
 
@@ -620,10 +675,15 @@ window.addEventListener('load', ()=>{
 
     function start(){
         if(!GAME_.status){
+            console.log('start');
             GAME_.status = true;
             renderer.setAnimationLoop(animation);
 
             trafficLightsRe = setInterval(setTrafficLights, 5000);
+
+            // Dom
+            scoreDom.classList.add('active');
+            resultAreaDom.classList.add('disable');
         }
     }
 
@@ -647,6 +707,7 @@ window.addEventListener('load', ()=>{
             if(e.key == 'R' || e.key == 'r'){
                 // Reset the game
                 e.preventDefault();
+                addNpcCar();
 
             }
             // Player Honk
@@ -680,7 +741,50 @@ window.addEventListener('load', ()=>{
         GAME_.playerHorn.play();
         // Add functionality
         acelerateNpc();
-    })
+    });
+    // Joystick
+    const brakeDom = document.querySelector('.joystick .brake')
+    brakeDom.addEventListener('touchstart', e =>{
+        e.preventDefault();
+        // Acelerate
+        GAME_.carDecelerate = true;
+
+        // HTML animation
+        brakeDom.classList.add('active');
+    });
+    brakeDom.addEventListener('touchend', e =>{
+        e.preventDefault();
+        // Acelerate
+        GAME_.carDecelerate = false;
+
+        // HTML animation
+        brakeDom.classList.remove('active');
+    });
+
+    const upDom = document.querySelector('.joystick .up')
+    upDom.addEventListener('touchstart', e =>{
+        e.preventDefault();
+        // Acelerate
+        GAME_.carAcelerate = true;
+
+        // HTML animation
+        upDom.classList.add('active');
+    });
+    upDom.addEventListener('touchend', e =>{
+        e.preventDefault();
+        // Acelerate
+        GAME_.carAcelerate = false;
+
+        // HTML animation
+        upDom.classList.remove('active');
+    });
+
+    // Start Game
+    const resultAreaDom = document.querySelector('.result-area');
+    window.addEventListener('keypress', e=>{
+        if(e.keyCode == 32) start();
+    });
+    resultAreaDom.addEventListener('touchend', start);
 
     /* ======================= */
     scene = new THREE.Scene();
@@ -754,7 +858,12 @@ window.addEventListener('load', ()=>{
     Track Game
     ================== */
     const scoreDom = document.querySelector('.best-score');
+    const penaltyDom = document.querySelector('.penalty');
     const trafficDom = document.querySelector('.traffic');
+
+
+
+
     
 
     // Render Map
@@ -789,10 +898,6 @@ window.addEventListener('load', ()=>{
 
     // Clean the map before starting the game
     reset();
-
-    window.addEventListener('keypress', e=>{
-        if(e.keyCode == 32) start();
-    })
 
 
 
