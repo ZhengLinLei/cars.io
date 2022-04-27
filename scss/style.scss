@@ -19,6 +19,21 @@ img {
 }
 
 body{
+    .responsive-alert{
+        display: none;
+        position: fixed;
+        z-index: 99999;
+        background-color: white;
+        text-align: center;
+        justify-content: center;
+        align-items: center;
+        h3{
+            color: #1b261b !important;
+            max-width: 300px;
+        }
+        width: 100vw;
+        height: 100vh;
+    }
     .best-score{
         position: fixed;
         z-index: 9999;
@@ -300,16 +315,11 @@ body{
     }
 }
 
-// Landscape
-@media screen and (hover: none) and (pointer: coarse) and (orientation: portrait) {
-    html {
-        transform: rotate(-90deg);
-        transform-origin: left top;
-        width: 100vh;
-        height: 100vw;
-        overflow-x: hidden;
-        position: absolute;
-        top: 100%;
-        left: 0;
+// Small devices
+@media only screen and (max-width: 700px) and (orientation: portrait){
+    body{
+        .responsive-alert{
+            display: flex;
+        }
     }
-  }
+}
